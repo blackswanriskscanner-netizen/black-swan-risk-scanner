@@ -3,7 +3,7 @@ import google.generativeai as genai
 import os
 
 # Configure Streamlit Page
-st.set_page_config(page_title="Risk Scanner", layout="centered")
+st.set_page_config(page_title="Irreversible Navigator – High-Stakes Decision Scanner")
 
 # Setup Gemini API (Assumes GEMINI_API_KEY is in .streamlit/secrets.toml)
 try:
@@ -15,7 +15,7 @@ except Exception as e:
     st.stop()
 
 # UI Components
-st.title("Black Swan Startup Risk Scanner – Free Test")
+st.title("Irreversible Navigator – High-Stakes Decision Scanner")
 
 user_input = st.text_area(
     "Paste your business plan summary here (English preferred)",
@@ -86,10 +86,41 @@ if analyze_button:
 # Footer
 st.caption("High-stakes framework: L0-L3 Irreversible Commitment Detection.")
 st.divider()
-st.subheader("快速反饋（幫助我們改進）")
-helpful = st.slider("這份分析有幫助嗎？", 1, 5, 3, format="%d 分")
-pay_willing = st.radio("你願意付費嗎？", ["願意 $9/次", "願意 $29/月", "免費就好", "還不值得付"])
-comment = st.text_area("有什麼建議？（e.g. 太長、太泛、想加功能）")
-if st.button("送出反饋"):
-    st.success("感謝！我們會盡快改進。")
-    # 之後可連 Google Sheet 記錄
+st.subheader("Quick Feedback – Help Us Improve")
+
+with st.form("feedback_form"):
+    helpful = st.slider("Was this analysis helpful?", 1, 5, 3, format="%d / 5")
+    pay_willing = st.radio("Would you pay for this tool?", [
+        "Yes, $9 per analysis",
+        "Yes, $29/month unlimited",
+        "Free is fine",
+        "Not worth paying yet"
+    ])
+    comment = st.text_area("Any suggestions? (e.g. too short, too vague, add features)")
+    submitted = st.form_submit_button("Submit Feedback")
+
+if submitted:
+    from datetime import datetime
+    import requests
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    form_url = "https://docs.google.com/forms/d/e/1FAIpQLSf5mtaEITUb2xU9kTAdLLfH43nVpJVTRbr7Wgp2A4l0-NCeDg/formResponse"
+
+    data = {
+        "entry.1411806970": str(helpful),          # Was this analysis helpful? (1-5)
+        "entry.1122506764": pay_willing,           # Would you pay? (must match exact option text)
+        "entry.1881486862": comment                # Any suggestions?
+        # 如果有時間欄位，再加 "entry.你的時間ID": timestamp
+    }
+
+    try:
+        response = requests.post(form_url, data=data)
+        print("送出狀態:", response.status_code)
+        print("回應文字:", response.text[:500])  # 看錯誤
+        if response.status_code in [200, 302]:
+            st.success("Thank you! Feedback recorded in Google Sheets.")
+        else:
+            st.error(f"Submit failed (HTTP {response.status_code}) - Check text match or entry ID")
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
